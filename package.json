@@ -2,6 +2,10 @@
   "name": "@quinnturner/audit-types",
   "version": "0.1.0",
   "description": "Type definitions for package manager json audit responses",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {},
   "types": "types/index.d.ts",
   "repository": {
