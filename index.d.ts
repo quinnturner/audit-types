@@ -167,7 +167,7 @@ declare namespace YarnAudit {
 }
 
 declare namespace NPMAuditReportV1 {
-  interface AuditResponse {
+  interface Audit {
     readonly actions: Action[];
     readonly advisories: AdvisoryMap;
     readonly muted: any[];
@@ -236,13 +236,25 @@ declare namespace NPMAuditReportV1 {
     readonly optional: boolean;
     readonly bundled: boolean;
   }
+
+  interface GenericError {
+    readonly code: string;
+    readonly summary: string;
+    readonly detail: string;
+  }
+
+  interface ErrorResponse {
+    readonly error: GenericError;
+  }
+
+  type AuditResponse = Audit | ErrorResponse;
 }
 
 /**
  * Yarn Berry's audit seems to be identical in structure to NPM's v6 audit format.
  */
 declare namespace YarnBerryAuditReport {
-  interface AuditResponse {
+  interface Audit {
     readonly actions: Action[];
     readonly advisories: AdvisoryMap;
     readonly muted: any[];
@@ -311,10 +323,22 @@ declare namespace YarnBerryAuditReport {
     readonly optional: boolean;
     readonly bundled: boolean;
   }
+
+  interface GenericError {
+    readonly code: string;
+    readonly summary: string;
+    readonly detail: string;
+  }
+
+  interface ErrorResponse {
+    readonly error: GenericError;
+  }
+
+  type AuditResponse = Audit | ErrorResponse;
 }
 
 declare namespace NPMAuditReportV2 {
-  interface AuditResponse {
+  interface Audit {
     readonly auditReportVersion: 2;
     readonly vulnerabilities: Vulnerabilities;
     readonly metadata: Metadata;
@@ -368,16 +392,26 @@ declare namespace NPMAuditReportV2 {
   // Error handling
 
   interface ENOLOCKError {
-    readonly error: {
-      readonly code: "ENOLOCK";
-      readonly summary: "This command requires an existing lockfile.";
-      readonly detail: "Try creating one first with: npm i --package-lock-only\nOriginal error: loadVirtual requires existing shrinkwrap file";
-    };
+    readonly code: "ENOLOCK";
+    readonly summary: "This command requires an existing lockfile.";
+    readonly detail: "Try creating one first with: npm i --package-lock-only\nOriginal error: loadVirtual requires existing shrinkwrap file";
   }
+
+  interface GenericError {
+    readonly code: string;
+    readonly summary: string;
+    readonly detail: string;
+  }
+
+  interface ErrorResponse {
+    readonly error: ENOLOCKError | GenericError;
+  }
+
+  type AuditResponse = Audit | ErrorResponse;
 }
 
 declare namespace PNPMAuditReport {
-  interface AuditResponse {
+  interface Audit {
     readonly auditReportVersion: 2;
     readonly vulnerabilities: Vulnerabilities;
     readonly metadata: Metadata;
@@ -428,5 +462,15 @@ declare namespace PNPMAuditReport {
     readonly range: string;
   }
 
-  // TODO: PNPM Error handling
+  interface GenericError {
+    readonly code: string;
+    readonly summary: string;
+    readonly detail: string;
+  }
+
+  interface ErrorResponse {
+    readonly error: GenericError;
+  }
+
+  type AuditResponse = Audit | ErrorResponse;
 }
