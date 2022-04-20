@@ -158,6 +158,7 @@ declare namespace YarnAudit {
   type ErrorResponse = ENOTFOUNDError;
 
   type AuditResponse =
+    | AuditAdvisory
     | InfoResponse
     | WarningResponse
     | ErrorResponse
