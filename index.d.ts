@@ -1,6 +1,6 @@
 export type Severity = "info" | "low" | "moderate" | "high" | "critical";
 
-export interface SeverityMap extends Record<Severity, number> {}
+export interface SeverityMap extends Readonly<Record<Severity, number>> {}
 
 export type GitHubAdvisoryId = `GHSA-${string}-${string}-${string}`;
 
@@ -16,21 +16,21 @@ export type ISO8601Date =
 export type Semver = `${number}.${number}.${number | string}`;
 
 export interface FoundBy {
-  link: string;
-  name: string;
-  email: string;
+  readonly link: string;
+  readonly name: string;
+  readonly email: string;
 }
 
 export interface ReportedBy {
-  link: string;
-  name: string;
-  email: string;
+  readonly link: string;
+  readonly name: string;
+  readonly email: string;
 }
 
 export interface Metadata {
-  module_type: string;
-  exploitability: number;
-  affected_components: string;
+  readonly module_type: string;
+  readonly exploitability: number;
+  readonly affected_components: string;
 }
 
 declare namespace YarnAudit {
@@ -43,116 +43,116 @@ declare namespace YarnAudit {
     | "auditSummary";
 
   interface AuditSummary {
-    type: "auditSummary";
-    data: SeverityMap;
+    readonly type: "auditSummary";
+    readonly data: SeverityMap;
   }
 
   interface ActivityStart {
-    type: "activityStart";
-    data: {
-      id: number;
+    readonly type: "activityStart";
+    readonly data: {
+      readonly id: number;
     };
   }
 
   interface ActivityTick {
-    type: "activityTick";
-    data: {
-      id: number;
-      name: `${string}@${number}.${number}.${string}`;
+    readonly type: "activityTick";
+    readonly data: {
+      readonly id: number;
+      readonly name: `${string}@${number}.${number}.${string}`;
     };
   }
 
   // Start audit advisory
 
   interface AuditAdvisoryResponse {
-    resolution: Resolution;
-    advisory: Advisory;
+    readonly resolution: Resolution;
+    readonly advisory: Advisory;
   }
 
   interface Advisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
-    findings: Finding[];
-    metadata: Metadata | null;
-    vulnerable_versions: string;
-    module_name: string;
-    severity: Severity;
-    github_advisory_id: ID;
-    cves: CVE[];
-    access: string;
-    patched_versions: string;
-    cvss: Cvss;
-    updated: ISO8601Date;
-    recommendation: string;
-    cwe: CWE[];
-    found_by: FoundBy | null;
-    deleted: ISO8601Date | null;
-    id: number;
-    references: string;
-    created: ISO8601Date;
-    reported_by: ReportedBy | null;
-    title: string;
-    npm_advisory_id: null;
-    overview: string;
-    url: `https://github.com/advisories/${ID}`;
+    readonly findings: Finding[];
+    readonly metadata: Metadata | null;
+    readonly vulnerable_versions: string;
+    readonly module_name: string;
+    readonly severity: Severity;
+    readonly github_advisory_id: ID;
+    readonly cves: CVE[];
+    readonly access: string;
+    readonly patched_versions: string;
+    readonly cvss: Cvss;
+    readonly updated: ISO8601Date;
+    readonly recommendation: string;
+    readonly cwe: CWE[];
+    readonly found_by: FoundBy | null;
+    readonly deleted: ISO8601Date | null;
+    readonly id: number;
+    readonly references: string;
+    readonly created: ISO8601Date;
+    readonly reported_by: ReportedBy | null;
+    readonly title: string;
+    readonly npm_advisory_id: null;
+    readonly overview: string;
+    readonly url: `https://github.com/advisories/${ID}`;
   }
 
   interface Cvss {
-    score: number;
-    vectorString: string | null;
+    readonly score: number;
+    readonly vectorString: string | null;
   }
 
   interface Finding {
-    version: string;
-    paths: string[];
+    readonly version: string;
+    readonly paths: string[];
   }
 
   interface Resolution {
-    id: number;
-    path: string;
-    dev: boolean;
-    bundled: boolean;
-    optional: boolean;
+    readonly id: number;
+    readonly path: string;
+    readonly dev: boolean;
+    readonly bundled: boolean;
+    readonly optional: boolean;
   }
 
   interface AuditAdvisory {
-    type: "auditAdvisory";
-    data: AuditAdvisoryResponse;
+    readonly type: "auditAdvisory";
+    readonly data: AuditAdvisoryResponse;
   }
 
   interface ActivityEnd {
-    type: "activityEnd";
-    data: {
-      id: number;
+    readonly type: "activityEnd";
+    readonly data: {
+      readonly id: number;
     };
   }
 
   interface NoLicenseFieldWarning<P extends string = string> {
-    type: "warning";
-    data: `${P}: No license field`;
+    readonly type: "warning";
+    readonly data: `${P}: No license field`;
   }
 
   type WarningResponse = NoLicenseFieldWarning;
 
   interface NoLockfileFound {
-    type: "info";
-    data: "No lockfile found.";
+    readonly type: "info";
+    readonly data: "No lockfile found.";
   }
 
   interface BugInfo {
-    type: "info";
-    data: `If you think this is a bug, please open a bug report with the information provided in ${string}`;
+    readonly type: "info";
+    readonly data: `If you think this is a bug, please open a bug report with the information provided in ${string}`;
   }
 
   interface MoreInfo {
-    type: "info";
-    data: "Visit \u001b[1mhttps://yarnpkg.com/en/docs/cli/audit\u001b[22m for documentation about this command.";
+    readonly type: "info";
+    readonly data: "Visit \u001b[1mhttps://yarnpkg.com/en/docs/cli/audit\u001b[22m for documentation about this command.";
   }
 
   type InfoResponse = NoLockfileFound | MoreInfo | BugInfo | MoreInfo;
 
   // No internet connection
   interface ENOTFOUNDError {
-    type: "error";
-    data: `An unexpected error occurred: "${string}: getaddrinfo ENOTFOUND ${string}".`;
+    readonly type: "error";
+    readonly data: `An unexpected error occurred: "${string}: getaddrinfo ENOTFOUND ${string}".`;
   }
 
   type ErrorResponse = ENOTFOUNDError;
@@ -168,135 +168,265 @@ declare namespace YarnAudit {
 
 declare namespace NPMAuditReportV1 {
   interface AuditResponse {
-    actions: Action[];
-    advisories: AdvisoryMap;
-    muted: any[];
-    metadata: AuditMetadata;
-    runId: string;
+    readonly actions: Action[];
+    readonly advisories: AdvisoryMap;
+    readonly muted: any[];
+    readonly metadata: AuditMetadata;
+    readonly runId: string;
   }
 
   interface AuditMetadata {
-    vulnerabilities: SeverityMap;
-    dependencies: number;
-    devDependencies: number;
-    optionalDependencies: number;
-    totalDependencies: number;
+    readonly vulnerabilities: SeverityMap;
+    readonly dependencies: number;
+    readonly devDependencies: number;
+    readonly optionalDependencies: number;
+    readonly totalDependencies: number;
   }
 
-  interface AdvisoryMap extends Record<GitHubAdvisoryId, Advisory> {}
+  interface AdvisoryMap extends Readonly<Record<GitHubAdvisoryId, Advisory>> {}
 
   interface Advisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
-    findings: Finding[];
-    metadata: Metadata | null;
-    vulnerable_versions: string;
-    module_name: string;
-    severity: Severity;
-    github_advisory_id: ID;
-    cves: CVE[];
-    access: string;
-    patched_versions: string;
-    cvss: Cvss;
-    updated: ISO8601Date;
-    recommendation: string;
-    cwe: CWE[];
-    found_by: FoundBy | null;
-    deleted: ISO8601Date | null;
-    id: number;
-    references: string;
-    created: ISO8601Date;
-    reported_by: ReportedBy | null;
-    title: string;
-    npm_advisory_id: null;
-    overview: string;
-    url: `https://github.com/advisories/${ID}`;
+    readonly findings: Finding[];
+    readonly metadata: Metadata | null;
+    readonly vulnerable_versions: string;
+    readonly module_name: string;
+    readonly severity: Severity;
+    readonly github_advisory_id: ID;
+    readonly cves: CVE[];
+    readonly access: string;
+    readonly patched_versions: string;
+    readonly cvss: Cvss;
+    readonly updated: ISO8601Date;
+    readonly recommendation: string;
+    readonly cwe: CWE[];
+    readonly found_by: FoundBy | null;
+    readonly deleted: ISO8601Date | null;
+    readonly id: number;
+    readonly references: string;
+    readonly created: ISO8601Date;
+    readonly reported_by: ReportedBy | null;
+    readonly title: string;
+    readonly npm_advisory_id: null;
+    readonly overview: string;
+    readonly url: `https://github.com/advisories/${ID}`;
   }
 
   interface Cvss {
-    score: number;
-    vectorString: string | null;
+    readonly score: number;
+    readonly vectorString: string | null;
   }
 
   interface Finding {
-    version: string;
-    paths: string[];
+    readonly version: string;
+    readonly paths: string[];
   }
 
   interface Action {
-    isMajor: boolean;
-    action: string;
-    resolves: Resolve[];
-    module: string;
-    target: string;
+    readonly isMajor: boolean;
+    readonly action: string;
+    readonly resolves: Resolve[];
+    readonly module: string;
+    readonly target: string;
   }
 
   interface Resolve {
-    id: number;
-    path: string;
-    dev: boolean;
-    optional: boolean;
-    bundled: boolean;
+    readonly id: number;
+    readonly path: string;
+    readonly dev: boolean;
+    readonly optional: boolean;
+    readonly bundled: boolean;
+  }
+}
+
+/**
+ * Yarn Berry's audit seems to be identical in structure to NPM's v6 audit format.
+ */
+declare namespace YarnBerryAuditReport {
+  interface AuditResponse {
+    readonly actions: Action[];
+    readonly advisories: AdvisoryMap;
+    readonly muted: any[];
+    readonly metadata: AuditMetadata;
+    readonly runId: string;
+  }
+
+  interface AuditMetadata {
+    readonly vulnerabilities: SeverityMap;
+    readonly dependencies: number;
+    readonly devDependencies: number;
+    readonly optionalDependencies: number;
+    readonly totalDependencies: number;
+  }
+
+  interface AdvisoryMap extends Readonly<Record<GitHubAdvisoryId, Advisory>> {}
+
+  interface Advisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
+    readonly findings: Finding[];
+    readonly metadata: Metadata | null;
+    readonly vulnerable_versions: string;
+    readonly module_name: string;
+    readonly severity: Severity;
+    readonly github_advisory_id: ID;
+    readonly cves: CVE[];
+    readonly access: string;
+    readonly patched_versions: string;
+    readonly cvss: Cvss;
+    readonly updated: ISO8601Date;
+    readonly recommendation: string;
+    readonly cwe: CWE[];
+    readonly found_by: FoundBy | null;
+    readonly deleted: ISO8601Date | null;
+    readonly id: number;
+    readonly references: string;
+    readonly created: ISO8601Date;
+    readonly reported_by: ReportedBy | null;
+    readonly title: string;
+    readonly npm_advisory_id: null;
+    readonly overview: string;
+    readonly url: `https://github.com/advisories/${ID}`;
+  }
+
+  interface Cvss {
+    readonly score: number;
+    readonly vectorString: string | null;
+  }
+
+  interface Finding {
+    readonly version: string;
+    readonly paths: string[];
+  }
+
+  interface Action {
+    readonly isMajor: boolean;
+    readonly action: string;
+    readonly resolves: Resolve[];
+    readonly module: string;
+    readonly target: string;
+  }
+
+  interface Resolve {
+    readonly id: number;
+    readonly path: string;
+    readonly dev: boolean;
+    readonly optional: boolean;
+    readonly bundled: boolean;
   }
 }
 
 declare namespace NPMAuditReportV2 {
   interface AuditResponse {
-    auditReportVersion: 2;
-    vulnerabilities: Vulnerabilities;
-    metadata: Metadata;
+    readonly auditReportVersion: 2;
+    readonly vulnerabilities: Vulnerabilities;
+    readonly metadata: Metadata;
   }
 
   interface Metadata {
-    vulnerabilities: VulnerabilityMetadata;
-    dependencies: Dependencies;
+    readonly vulnerabilities: VulnerabilityMetadata;
+    readonly dependencies: Dependencies;
   }
 
   interface VulnerabilityMetadata extends Record<Severity, number> {}
 
   interface Dependencies {
-    prod: number;
-    dev: number;
-    optional: number;
-    peer: number;
-    peerOptional: number;
-    total: number;
+    readonly prod: number;
+    readonly dev: number;
+    readonly optional: number;
+    readonly peer: number;
+    readonly peerOptional: number;
+    readonly total: number;
   }
 
-  interface Vulnerabilities extends Record<string, Advisory> {}
+  interface Vulnerabilities extends Readonly<Record<string, Advisory>> {}
 
   interface Advisory {
-    name: string;
-    severity: Severity;
-    isDirect: boolean;
-    via: Via[];
-    effects: string[];
-    range: string;
-    nodes: string[];
-    fixAvailable: FixAvailable;
+    readonly name: string;
+    readonly severity: Severity;
+    readonly isDirect: boolean;
+    readonly via: Via[];
+    readonly effects: string[];
+    readonly range: string;
+    readonly nodes: string[];
+    readonly fixAvailable: FixAvailable;
   }
 
   interface FixAvailable {
-    name: string;
-    version: string;
-    isSemVerMajor: boolean;
+    readonly name: string;
+    readonly version: string;
+    readonly isSemVerMajor: boolean;
   }
 
   interface Via<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
-    source: number;
-    name: string;
-    dependency: string;
-    title: string;
-    url: `https://github.com/advisories/${ID}`;
-    severity: Severity;
-    range: string;
+    readonly source: number;
+    readonly name: string;
+    readonly dependency: string;
+    readonly title: string;
+    readonly url: `https://github.com/advisories/${ID}`;
+    readonly severity: Severity;
+    readonly range: string;
   }
 
   // Error handling
 
   interface ENOLOCKError {
-    error: {
-      code: "ENOLOCK";
-      summary: "This command requires an existing lockfile.";
-      detail: "Try creating one first with: npm i --package-lock-only\nOriginal error: loadVirtual requires existing shrinkwrap file";
+    readonly error: {
+      readonly code: "ENOLOCK";
+      readonly summary: "This command requires an existing lockfile.";
+      readonly detail: "Try creating one first with: npm i --package-lock-only\nOriginal error: loadVirtual requires existing shrinkwrap file";
     };
   }
+}
+
+declare namespace PNPMAuditReport {
+  interface AuditResponse {
+    readonly auditReportVersion: 2;
+    readonly vulnerabilities: Vulnerabilities;
+    readonly metadata: Metadata;
+  }
+
+  interface Metadata {
+    readonly vulnerabilities: VulnerabilityMetadata;
+    readonly dependencies: Dependencies;
+  }
+
+  interface VulnerabilityMetadata extends Record<Severity, number> {}
+
+  interface Dependencies {
+    readonly prod: number;
+    readonly dev: number;
+    readonly optional: number;
+    readonly peer: number;
+    readonly peerOptional: number;
+    readonly total: number;
+  }
+
+  interface Vulnerabilities extends Record<string, Advisory> {}
+
+  interface Advisory {
+    readonly name: string;
+    readonly severity: Severity;
+    readonly isDirect: boolean;
+    readonly via: Via[];
+    readonly effects: string[];
+    readonly range: string;
+    readonly nodes: string[];
+    readonly fixAvailable: FixAvailable;
+  }
+
+  interface FixAvailable {
+    readonly name: string;
+    readonly version: string;
+    readonly isSemVerMajor: boolean;
+  }
+
+  interface Via<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
+    readonly source: number;
+    readonly name: string;
+    readonly dependency: string;
+    readonly title: string;
+    readonly url: `https://github.com/advisories/${ID}`;
+    readonly severity: Severity;
+    readonly range: string;
+  }
+
+  // TODO: PNPM Error handling
 }
