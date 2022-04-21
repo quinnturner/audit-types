@@ -413,54 +413,73 @@ declare namespace NPMAuditReportV2 {
 
 declare namespace PNPMAuditReport {
   interface Audit {
-    readonly auditReportVersion: 2;
-    readonly vulnerabilities: Vulnerabilities;
-    readonly metadata: Metadata;
+    readonly actions: Action[];
+    readonly advisories: AdvisoryMap;
+    readonly muted: any[];
+    readonly metadata: AuditMetadata;
+    readonly runId: string;
   }
 
-  interface Metadata {
-    readonly vulnerabilities: VulnerabilityMetadata;
-    readonly dependencies: Dependencies;
+  interface AuditMetadata {
+    readonly vulnerabilities: SeverityMap;
+    readonly dependencies: number;
+    readonly devDependencies: number;
+    readonly optionalDependencies: number;
+    readonly totalDependencies: number;
   }
 
-  interface VulnerabilityMetadata extends Record<Severity, number> {}
+  interface AdvisoryMap extends Readonly<Record<GitHubAdvisoryId, Advisory>> {}
 
-  interface Dependencies {
-    readonly prod: number;
-    readonly dev: number;
-    readonly optional: number;
-    readonly peer: number;
-    readonly peerOptional: number;
-    readonly total: number;
-  }
-
-  interface Vulnerabilities extends Record<string, Advisory> {}
-
-  interface Advisory {
-    readonly name: string;
+  interface Advisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
+    readonly findings: Finding[];
+    readonly metadata: Metadata | null;
+    readonly vulnerable_versions: string;
+    readonly module_name: string;
     readonly severity: Severity;
-    readonly isDirect: boolean;
-    readonly via: Via[];
-    readonly effects: string[];
-    readonly range: string;
-    readonly nodes: string[];
-    readonly fixAvailable: FixAvailable;
-  }
-
-  interface FixAvailable {
-    readonly name: string;
-    readonly version: string;
-    readonly isSemVerMajor: boolean;
-  }
-
-  interface Via<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
-    readonly source: number;
-    readonly name: string;
-    readonly dependency: string;
+    readonly github_advisory_id: ID;
+    readonly cves: CVE[];
+    readonly access: string;
+    readonly patched_versions: string;
+    readonly cvss: Cvss;
+    readonly updated: ISO8601Date;
+    readonly recommendation: string;
+    readonly cwe: CWE[];
+    readonly found_by: FoundBy | null;
+    readonly deleted: ISO8601Date | null;
+    readonly id: number;
+    readonly references: string;
+    readonly created: ISO8601Date;
+    readonly reported_by: ReportedBy | null;
     readonly title: string;
+    readonly npm_advisory_id: null;
+    readonly overview: string;
     readonly url: `https://github.com/advisories/${ID}`;
-    readonly severity: Severity;
-    readonly range: string;
+  }
+
+  interface Cvss {
+    readonly score: number;
+    readonly vectorString: string | null;
+  }
+
+  interface Finding {
+    readonly version: string;
+    readonly paths: string[];
+  }
+
+  interface Action {
+    readonly isMajor: boolean;
+    readonly action: string;
+    readonly resolves: Resolve[];
+    readonly module: string;
+    readonly target: string;
+  }
+
+  interface Resolve {
+    readonly id: number;
+    readonly path: string;
+    readonly dev: boolean;
+    readonly optional: boolean;
+    readonly bundled: boolean;
   }
 
   interface GenericError {
