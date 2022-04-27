@@ -19,7 +19,7 @@
     "types"
   ],
   "author": "Quinn Turner <quinnturnertech@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/quinnturner/audit-types/issues"
   },
