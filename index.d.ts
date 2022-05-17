@@ -392,6 +392,16 @@ declare namespace NPMAuditReportV2 {
 
   // Error handling
 
+  interface ECONNREFUSEDMessageResponse {
+    readonly message: `request to ${string} failed, reason: connect ECONNREFUSED ${string}`
+  }
+
+  interface GenericMessageResponse {
+    readonly message: string;
+  }
+
+  type MessageResponse = ECONNREFUSEDMessageResponse | GenericMessageResponse;
+
   interface ENOLOCKError {
     readonly code: "ENOLOCK";
     readonly summary: "This command requires an existing lockfile.";
@@ -408,7 +418,7 @@ declare namespace NPMAuditReportV2 {
     readonly error: ENOLOCKError | GenericError;
   }
 
-  type AuditResponse = Audit | ErrorResponse;
+  type AuditResponse = Audit | ErrorResponse | MessageResponse;
 }
 
 declare namespace PNPMAuditReport {
