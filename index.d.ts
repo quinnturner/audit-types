@@ -427,7 +427,6 @@ declare namespace PNPMAuditReport {
     readonly advisories: AdvisoryMap;
     readonly muted: any[];
     readonly metadata: AuditMetadata;
-    readonly runId: string;
   }
 
   interface AuditMetadata {
