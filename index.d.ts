@@ -476,11 +476,9 @@ declare namespace PNPMAuditReport {
   }
 
   interface Action {
-    readonly isMajor: boolean;
     readonly action: string;
     readonly resolves: Resolve[];
     readonly module: string;
-    readonly target: string;
   }
 
   interface Resolve {
