@@ -371,7 +371,7 @@ declare namespace NPMAuditReportV2 {
     readonly effects: string[];
     readonly range: string;
     readonly nodes: string[];
-    readonly fixAvailable: FixAvailable;
+    readonly fixAvailable: FixAvailable | false;
   }
 
   interface FixAvailable {
