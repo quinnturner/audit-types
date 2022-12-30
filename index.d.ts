@@ -223,11 +223,11 @@ declare namespace NPMAuditReportV1 {
   }
 
   interface Action {
-    readonly isMajor: boolean;
+    readonly isMajor?: boolean;
     readonly action: string;
     readonly resolves: Resolve[];
     readonly module: string;
-    readonly target: string;
+    readonly target?: string;
   }
 
   interface Resolve {
@@ -310,11 +310,11 @@ declare namespace YarnBerryAuditReport {
   }
 
   interface Action {
-    readonly isMajor: boolean;
+    readonly isMajor?: boolean;
     readonly action: string;
     readonly resolves: Resolve[];
     readonly module: string;
-    readonly target: string;
+    readonly target?: string;
   }
 
   interface Resolve {
