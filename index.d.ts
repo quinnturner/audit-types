@@ -367,7 +367,7 @@ declare namespace NPMAuditReportV2 {
     readonly name: string;
     readonly severity: Severity;
     readonly isDirect: boolean;
-    readonly via: Via[];
+    readonly via: Via[] | string[];
     readonly effects: string[];
     readonly range: string;
     readonly nodes: string[];
