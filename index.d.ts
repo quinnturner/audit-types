@@ -252,15 +252,16 @@ declare namespace NPMAuditReportV1 {
 }
 
 /**
- * Yarn Berry's audit seems to be identical in structure to NPM's v6 audit format.
+ * Yarn 2 and 3 audit seems to be identical in structure to NPM's v6 audit format
+ * except that `runId` is not required.
  */
-declare namespace YarnBerryAuditReport {
+declare namespace Yarn2And3AuditReport {
   interface Audit {
     readonly actions: Action[];
     readonly advisories: AdvisoryMap;
     readonly muted: any[];
     readonly metadata: AuditMetadata;
-    readonly runId: string;
+    readonly runId?: string;
   }
 
   interface AuditMetadata {
