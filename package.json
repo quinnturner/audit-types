@@ -1,6 +1,6 @@
 {
   "name": "audit-types",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Type definitions for package manager json audit responses",
   "private": false,
   "publishConfig": {
