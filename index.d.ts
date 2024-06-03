@@ -339,6 +339,105 @@ declare namespace Yarn2And3AuditReport {
   type AuditResponse = Audit | ErrorResponse;
 }
 
+/**
+ * @see {@link https://github.com/yarnpkg/berry/blob/cdb7f3c9ca370a574f0bb46242db0291f255ac5c/packages/yarnpkg-core/sources/types.ts#L19}
+ */
+declare namespace YarnNpmAuditReport {
+  /**
+   * Unique hash of a package descriptor. Used as key in various places so that
+   * two descriptors can be quickly compared.
+   */
+  export type IdentHash = string & { __identHash: string };
+  /**
+   * Combination of a scope and name, bound with a hash suitable for comparisons.
+   *
+   * Use `parseIdent` to turn ident strings (`@types/node`) into the ident
+   * structure ({scope: `types`, name: `node`}), `makeIdent` to create a new one
+   * from known parameters, or `stringifyIdent` to retrieve the string as you'd
+   * see it in the `dependencies` field.
+   */
+  export interface Ident {
+    /**
+     * Unique hash of a package scope and name. Used as key in various places,
+     * so that two idents can be quickly compared.
+     */
+    identHash: IdentHash;
+
+    /**
+     * Scope of the package, without the `@` prefix (eg. `types`).
+     */
+    scope: string | null;
+
+    /**
+     * Name of the package (eg. `node`).
+     */
+    name: string;
+  }
+
+  /**
+   * Unique hash of a package locator. Used as key in various places so that
+   * two locators can be quickly compared.
+   */
+  export type LocatorHash = string & { __locatorHash: string };
+
+  /**
+   * Locator are just like idents (including their `identHash`), except that
+   * they also contain a reference and an additional comparator hash. They are
+   * in this regard very similar to descriptors except that each descriptor may
+   * reference multiple valid candidate packages whereas each locators can only
+   * reference a single package.
+   *
+   * This interesting property means that each locator can be safely turned into
+   * a descriptor (using `convertLocatorToDescriptor`), but not the other way
+   * around (except in very specific cases).
+   */
+  export interface Locator extends Ident {
+    /**
+     * Unique hash of a package locator. Used as key in various places so that
+     * two locators can be quickly compared.
+     */
+    locatorHash: LocatorHash;
+
+    /**
+     * A package reference uniquely identifies a package (eg. `1.2.3`).
+     */
+    reference: string;
+  }
+
+  export enum Environment {
+    All = `all`,
+    Production = `production`,
+    Development = `development`,
+  }
+
+  export enum Severity {
+    Info = `info`,
+    Low = `low`,
+    Moderate = `moderate`,
+    High = `high`,
+    Critical = `critical`,
+  }
+
+  export interface AuditMetadata {
+    id: number | string;
+    url?: string;
+    title: string;
+    severity: Severity;
+    vulnerable_versions: string;
+  }
+
+  export type AuditExtendedMetadata = AuditMetadata & {
+    dependents: Array<Locator>;
+    versions: Array<string>;
+  };
+
+  export type AuditResponse = Record<string, Array<AuditMetadata>>;
+  export type AuditExtendedResponse = Record<
+    string,
+    Array<AuditExtendedMetadata>
+  >;
+}
+
 declare namespace NPMAuditReportV2 {
   interface Audit {
     readonly auditReportVersion: 2;
@@ -394,7 +493,7 @@ declare namespace NPMAuditReportV2 {
   // Error handling
 
   interface ECONNREFUSEDMessageResponse {
-    readonly message: `request to ${string} failed, reason: connect ECONNREFUSED ${string}`
+    readonly message: `request to ${string} failed, reason: connect ECONNREFUSED ${string}`;
   }
 
   interface GenericMessageResponse {
