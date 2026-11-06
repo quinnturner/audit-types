@@ -22,6 +22,4 @@ jobs:
       - uses: pnpm/action-setup@v6
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      - run: pnpm publish --no-git-checks --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+      - run: npm stage publish
