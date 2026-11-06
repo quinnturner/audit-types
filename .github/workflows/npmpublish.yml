@@ -10,6 +10,9 @@ on:
 jobs:
   test-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -19,6 +22,6 @@ jobs:
       - uses: pnpm/action-setup@v6
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      - run: pnpm publish --no-git-checks
+      - run: pnpm publish --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
