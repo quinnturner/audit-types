@@ -1,36 +1,44 @@
 {
   "name": "audit-types",
-  "version": "0.6.2",
-  "description": "Type definitions for package manager json audit responses",
+  "version": "0.7.0",
   "private": false,
-  "publishConfig": {
-    "access": "public"
+  "description": "Type definitions for package manager json audit responses",
+  "keywords": [
+    "audit",
+    "bun",
+    "npm",
+    "pnpm",
+    "types",
+    "yarn"
+  ],
+  "homepage": "https://github.com/quinnturner/audit-types#readme",
+  "bugs": {
+    "url": "https://github.com/quinnturner/audit-types/issues"
   },
-  "types": "index.d.ts",
+  "license": "MIT",
+  "author": "Quinn Turner <quinnturnertech@gmail.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quinnturner/audit-types.git"
   },
-  "keywords": [
-    "npm",
-    "yarn",
-    "pnpm",
-    "audit",
-    "types"
-  ],
-  "author": "Quinn Turner <quinnturnertech@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/quinnturner/audit-types/issues"
-  },
-  "homepage": "https://github.com/quinnturner/audit-types#readme",
-  "dependencies": {},
-  "devDependencies": {
-    "typescript": "^5.4.5"
-  },
   "files": [
     "index.d.ts",
     "README.md",
-    "package.json"
-  ]
+    "package.json",
+    "SOURCES.md"
+  ],
+  "types": "index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "tsc -p tsconfig.json && tsc -p tsconfig.test.json && npm run test:package",
+    "test:package": "node test/package-consumers.mjs",
+    "prepublishOnly": "npm test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  },
+  "packageManager": "pnpm@11.28.11+sha512.740184d10f81f5d5b165be88560ee7ba62406c4134896abc27a580109eec2f47c1e41d91251c944c2cababcb1c22461799ebb72de2ec625af2030b0e36c735a3"
 }

@@ -1,379 +1,288 @@
+/** JSON wire formats; these declarations do not validate untrusted input. */
 export type Severity = "info" | "low" | "moderate" | "high" | "critical";
-
 export interface SeverityMap extends Readonly<Record<Severity, number>> {}
-
 export type GitHubAdvisoryId = `GHSA-${string}-${string}-${string}`;
-
+export type NpmAdvisoryId = `${number}`;
+export type AdvisoryMapKey = NpmAdvisoryId | GitHubAdvisoryId;
 export type CVE = `CVE-${number}-${number}`;
-
 export type CWE = `CWE-${number}`;
-
-// This is a simple approximation.
-export type ISO8601Date =
-  `${number}-${number}-${number}T${number}:${number}:${number}.${number}Z`;
-
-// This isn't exactly correct, as `1.0.` works.
+/** Approximation retained for consumers that use this helper explicitly. */
+export type ISO8601Date = `${number}-${number}-${number}T${number}:${number}:${number}.${number}Z`;
 export type Semver = `${number}.${number}.${number | string}`;
 
+export type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
+export interface JsonObject {
+  readonly [key: string]: JsonValue;
+}
+export interface Cvss {
+  readonly score: number;
+  readonly vectorString: string | null;
+}
 export interface FoundBy {
-  readonly link: string;
   readonly name: string;
-  readonly email: string;
+  readonly link?: string;
+  readonly email?: string;
 }
-
-export interface ReportedBy {
-  readonly link: string;
-  readonly name: string;
-  readonly email: string;
-}
-
+export interface ReportedBy extends FoundBy {}
 export interface Metadata {
   readonly module_type: string;
   readonly exploitability: number;
   readonly affected_components: string;
 }
+export interface LegacyAuditMetadata {
+  readonly vulnerabilities: SeverityMap;
+  readonly dependencies: number;
+  readonly devDependencies: number;
+  readonly optionalDependencies: number;
+  readonly totalDependencies: number;
+}
+export interface AuditFinding {
+  readonly version: string;
+  readonly paths: string[];
+  readonly dev?: boolean;
+  readonly optional?: boolean;
+  readonly bundled?: boolean;
+}
+export interface AuditResolution {
+  readonly id: number;
+  readonly path: string;
+  readonly dev: boolean;
+  readonly optional: boolean;
+  readonly bundled: boolean;
+}
+export interface AuditAction {
+  readonly action: string;
+  readonly module: string;
+  readonly resolves: AuditResolution[];
+  readonly target?: string;
+  readonly isMajor?: boolean;
+}
+export interface AuditError {
+  readonly code?: string;
+  readonly summary: string;
+  readonly detail: string;
+}
+/** Quick-audit advisories predate the registry's GitHub advisory migration. */
+export interface LegacyAuditAdvisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
+  readonly findings: AuditFinding[];
+  readonly id: number;
+  readonly title: string;
+  readonly module_name: string;
+  readonly severity: Severity;
+  readonly vulnerable_versions: string;
+  readonly patched_versions: string;
+  readonly url: string;
+  readonly github_advisory_id?: ID;
+  readonly npm_advisory_id?: number | null;
+  readonly cvss?: Cvss;
+  readonly cwe: string | string[];
+  readonly cves: string[];
+  readonly metadata: Metadata | null;
+  readonly access: string;
+  readonly created: string;
+  readonly updated: string;
+  readonly deleted?: boolean | string | null;
+  readonly found_by: FoundBy | null;
+  readonly reported_by: ReportedBy | null;
+  readonly references: string;
+  readonly overview: string;
+  readonly recommendation: string;
+}
 
-declare namespace YarnAudit {
-  type AuditResponseType =
-    | "warning"
-    | "activityStart"
-    | "activityTick"
-    | "activityEnd"
-    | "auditAdvisory"
-    | "auditSummary";
-
-  interface AuditSummary {
-    readonly type: "auditSummary";
-    readonly data: SeverityMap;
+/** One JSON line from Yarn Classic's reporter (stdout and stderr). */
+export namespace YarnAudit {
+  interface Message<T extends string> {
+    readonly type: T;
+    readonly data: string;
   }
-
-  interface ActivityStart {
-    readonly type: "activityStart";
-    readonly data: {
-      readonly id: number;
-    };
-  }
-
-  interface ActivityTick {
-    readonly type: "activityTick";
-    readonly data: {
-      readonly id: number;
-      readonly name: `${string}@${number}.${number}.${string}`;
-    };
-  }
-
-  // Start audit advisory
-
+  interface AuditMetadata extends LegacyAuditMetadata {}
+  interface Advisory<
+    ID extends GitHubAdvisoryId = GitHubAdvisoryId,
+  > extends LegacyAuditAdvisory<ID> {}
+  interface Cvss extends SharedCvss {}
+  interface Finding extends AuditFinding {}
+  interface Resolution extends AuditResolution {}
   interface AuditAdvisoryResponse {
     readonly resolution: Resolution;
     readonly advisory: Advisory;
   }
-
-  interface Advisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
-    readonly findings: Finding[];
-    readonly metadata: Metadata | null;
-    readonly vulnerable_versions: string;
-    readonly module_name: string;
-    readonly severity: Severity;
-    readonly github_advisory_id: ID;
-    readonly cves: CVE[];
-    readonly access: string;
-    readonly patched_versions: string;
-    readonly cvss: Cvss;
-    readonly updated: ISO8601Date;
-    readonly recommendation: string;
-    readonly cwe: CWE[];
-    readonly found_by: FoundBy | null;
-    readonly deleted: ISO8601Date | null;
-    readonly id: number;
-    readonly references: string;
-    readonly created: ISO8601Date;
-    readonly reported_by: ReportedBy | null;
-    readonly title: string;
-    readonly npm_advisory_id: null;
-    readonly overview: string;
-    readonly url: `https://github.com/advisories/${ID}`;
-  }
-
-  interface Cvss {
-    readonly score: number;
-    readonly vectorString: string | null;
-  }
-
-  interface Finding {
-    readonly version: string;
-    readonly paths: string[];
-  }
-
-  interface Resolution {
-    readonly id: number;
-    readonly path: string;
-    readonly dev: boolean;
-    readonly bundled: boolean;
-    readonly optional: boolean;
-  }
-
   interface AuditAdvisory {
     readonly type: "auditAdvisory";
     readonly data: AuditAdvisoryResponse;
   }
-
+  interface AuditSummary {
+    readonly type: "auditSummary";
+    readonly data: AuditMetadata;
+  }
+  interface ActivityStart {
+    readonly type: "activityStart";
+    readonly data: { readonly id: number };
+  }
   interface ActivityEnd {
     readonly type: "activityEnd";
+    readonly data: { readonly id: number };
+  }
+  interface ActivityTick {
+    readonly type: "activityTick";
+    readonly data: { readonly id: number; readonly name: string };
+  }
+  interface ProgressStart {
+    readonly type: "progressStart";
+    readonly data: { readonly id: number; readonly total: number };
+  }
+  interface ProgressTick {
+    readonly type: "progressTick";
+    readonly data: { readonly id: number; readonly current: number };
+  }
+  interface ProgressFinish {
+    readonly type: "progressFinish";
+    readonly data: { readonly id: number };
+  }
+  interface ActivitySetStart {
+    readonly type: "activitySetStart";
+    readonly data: { readonly id: number; readonly total: number; readonly workers: number };
+  }
+  interface ActivitySetTick {
+    readonly type: "activitySetTick";
     readonly data: {
       readonly id: number;
+      readonly header: string;
+      readonly current: number;
+      readonly worker: number;
+      readonly message: string;
     };
   }
-
-  interface NoLicenseFieldWarning<P extends string = string> {
-    readonly type: "warning";
+  interface ActivitySetEnd {
+    readonly type: "activitySetEnd";
+    readonly data: { readonly id: number };
+  }
+  interface Finished {
+    readonly type: "finished";
+    readonly data: number;
+  }
+  interface NoLicenseFieldWarning<P extends string = string> extends Message<"warning"> {
     readonly data: `${P}: No license field`;
   }
-
-  type WarningResponse = NoLicenseFieldWarning;
-
-  interface NoLockfileFound {
-    readonly type: "info";
+  interface NoLockfileFound extends Message<"info"> {
     readonly data: "No lockfile found.";
   }
-
-  interface BugInfo {
-    readonly type: "info";
+  interface BugInfo extends Message<"info"> {
     readonly data: `If you think this is a bug, please open a bug report with the information provided in ${string}`;
   }
-
-  interface MoreInfo {
-    readonly type: "info";
+  interface MoreInfo extends Message<"info"> {
     readonly data: "Visit \u001b[1mhttps://yarnpkg.com/en/docs/cli/audit\u001b[22m for documentation about this command.";
   }
-
-  type InfoResponse = NoLockfileFound | MoreInfo | BugInfo | MoreInfo;
-
-  // No internet connection
-  interface ENOTFOUNDError {
-    readonly type: "error";
+  interface ENOTFOUNDError extends Message<"error"> {
     readonly data: `An unexpected error occurred: "${string}: getaddrinfo ENOTFOUND ${string}".`;
   }
-
-  type ErrorResponse = ENOTFOUNDError;
-
+  type WarningResponse = Message<"warning">;
+  type InfoResponse = Message<"info">;
+  type ErrorResponse = Message<"error">;
   type AuditResponse =
     | AuditAdvisory
+    | AuditSummary
     | InfoResponse
     | WarningResponse
     | ErrorResponse
-    | AuditSummary
+    | Message<"verbose" | "log" | "success" | "command">
+    | ActivityStart
     | ActivityEnd
-    | ActivityTick;
+    | ActivityTick
+    | ActivitySetStart
+    | ActivitySetTick
+    | ActivitySetEnd
+    | ProgressStart
+    | ProgressTick
+    | ProgressFinish
+    | Finished;
+  type AuditResponseType = AuditResponse["type"];
 }
 
-declare namespace NPMAuditReportV1 {
+// Private alias avoids shadowing the shared interface inside namespaces.
+type SharedCvss = Cvss;
+
+export namespace NPMAuditReportV1 {
   interface Audit {
     readonly actions: Action[];
     readonly advisories: AdvisoryMap;
-    readonly muted: any[];
+    readonly muted: unknown[];
     readonly metadata: AuditMetadata;
     readonly runId: string;
   }
-
-  interface AuditMetadata {
-    readonly vulnerabilities: SeverityMap;
-    readonly dependencies: number;
-    readonly devDependencies: number;
-    readonly optionalDependencies: number;
-    readonly totalDependencies: number;
-  }
-
-  interface AdvisoryMap extends Readonly<Record<GitHubAdvisoryId, Advisory>> {}
-
-  interface Advisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
-    readonly findings: Finding[];
-    readonly metadata: Metadata | null;
-    readonly vulnerable_versions: string;
-    readonly module_name: string;
-    readonly severity: Severity;
-    readonly github_advisory_id: ID;
-    readonly cves: CVE[];
-    readonly access: string;
-    readonly patched_versions: string;
-    readonly cvss: Cvss;
-    readonly updated: ISO8601Date;
-    readonly recommendation: string;
-    readonly cwe: CWE[];
-    readonly found_by: FoundBy | null;
-    readonly deleted: ISO8601Date | null;
-    readonly id: number;
-    readonly references: string;
-    readonly created: ISO8601Date;
-    readonly reported_by: ReportedBy | null;
-    readonly title: string;
-    readonly npm_advisory_id: null;
-    readonly overview: string;
-    readonly url: `https://github.com/advisories/${ID}`;
-  }
-
-  interface Cvss {
-    readonly score: number;
-    readonly vectorString: string | null;
-  }
-
-  interface Finding {
-    readonly version: string;
-    readonly paths: string[];
-  }
-
-  interface Action {
-    readonly isMajor?: boolean;
-    readonly action: string;
-    readonly resolves: Resolve[];
-    readonly module: string;
-    readonly target?: string;
-  }
-
-  interface Resolve {
-    readonly id: number;
-    readonly path: string;
-    readonly dev: boolean;
-    readonly optional: boolean;
-    readonly bundled: boolean;
-  }
-
-  interface GenericError {
-    readonly code: string;
-    readonly summary: string;
-    readonly detail: string;
-  }
-
+  interface AuditMetadata extends LegacyAuditMetadata {}
+  interface AdvisoryMap extends Readonly<Record<string, Advisory>> {}
+  interface Advisory<
+    ID extends GitHubAdvisoryId = GitHubAdvisoryId,
+  > extends LegacyAuditAdvisory<ID> {}
+  interface Cvss extends SharedCvss {}
+  interface Finding extends AuditFinding {}
+  interface Action extends AuditAction {}
+  interface Resolve extends AuditResolution {}
+  interface GenericError extends AuditError {}
   interface ErrorResponse {
     readonly error: GenericError;
   }
-
   type AuditResponse = Audit | ErrorResponse;
 }
 
-/**
- * Yarn 2 and 3 audit seems to be identical in structure to NPM's v6 audit format
- * except that `runId` is not required.
- */
-declare namespace Yarn2And3AuditReport {
-  interface Audit {
-    readonly actions: Action[];
-    readonly advisories: AdvisoryMap;
-    readonly muted: any[];
-    readonly metadata: AuditMetadata;
+/** Yarn 2/3 forwards the quick-audit registry response. */
+export namespace Yarn2And3AuditReport {
+  interface Audit extends Omit<NPMAuditReportV1.Audit, "runId"> {
     readonly runId?: string;
   }
-
-  interface AuditMetadata {
-    readonly vulnerabilities: SeverityMap;
-    readonly dependencies: number;
-    readonly devDependencies: number;
-    readonly optionalDependencies: number;
-    readonly totalDependencies: number;
-  }
-
-  interface AdvisoryMap extends Readonly<Record<GitHubAdvisoryId, Advisory>> {}
-
-  interface Advisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
-    readonly findings: Finding[];
-    readonly metadata: Metadata | null;
-    readonly vulnerable_versions: string;
-    readonly module_name: string;
-    readonly severity: Severity;
-    readonly github_advisory_id: ID;
-    readonly cves: CVE[];
-    readonly access: string;
-    readonly patched_versions: string;
-    readonly cvss: Cvss;
-    readonly updated: ISO8601Date;
-    readonly recommendation: string;
-    readonly cwe: CWE[];
-    readonly found_by: FoundBy | null;
-    readonly deleted: ISO8601Date | null;
-    readonly id: number;
-    readonly references: string;
-    readonly created: ISO8601Date;
-    readonly reported_by: ReportedBy | null;
-    readonly title: string;
-    readonly npm_advisory_id: null;
-    readonly overview: string;
-    readonly url: `https://github.com/advisories/${ID}`;
-  }
-
-  interface Cvss {
-    readonly score: number;
-    readonly vectorString: string | null;
-  }
-
-  interface Finding {
-    readonly version: string;
-    readonly paths: string[];
-  }
-
-  interface Action {
-    readonly isMajor?: boolean;
-    readonly action: string;
-    readonly resolves: Resolve[];
-    readonly module: string;
-    readonly target?: string;
-  }
-
-  interface Resolve {
-    readonly id: number;
-    readonly path: string;
-    readonly dev: boolean;
-    readonly optional: boolean;
-    readonly bundled: boolean;
-  }
-
-  interface GenericError {
-    readonly code: string;
-    readonly summary: string;
-    readonly detail: string;
-  }
-
+  interface AuditMetadata extends LegacyAuditMetadata {}
+  interface AdvisoryMap extends Readonly<Record<string, Advisory>> {}
+  interface Advisory<
+    ID extends GitHubAdvisoryId = GitHubAdvisoryId,
+  > extends LegacyAuditAdvisory<ID> {}
+  interface Cvss extends SharedCvss {}
+  interface Finding extends AuditFinding {}
+  interface Action extends AuditAction {}
+  interface Resolve extends AuditResolution {}
+  interface GenericError extends AuditError {}
   interface ErrorResponse {
     readonly error: GenericError;
   }
-
   type AuditResponse = Audit | ErrorResponse;
 }
 
-/**
- * @see {@link https://github.com/yarnpkg/berry/blob/cdb7f3c9ca370a574f0bb46242db0291f255ac5c/packages/plugin-npm-cli/sources/npmAuditUtils.ts#L28}
- */
-declare namespace YarnNpmAuditReport {
-  /**
-   * @see {@link https://github.com/yarnpkg/berry/blob/cdb7f3c9ca370a574f0bb46242db0291f255ac5c/packages/plugin-npm-cli/sources/npmAuditUtils.ts#L28}
-   */
-  export type AuditResponse<A extends string = string> = {
-    value: A;
-    children: {
-      ID: number;
-      Issue: string;
-      URL: `https://github.com/advisories/${GitHubAdvisoryId}`;
-      Severity: Severity;
-      "Vulnerable Versions": string;
-      "Tree Versions": string[];
-      "Dependents": `${string}@${string}`[];
-    }
+/** Yarn 4+ emits one tree entry per line, or reporter diagnostics. A clean audit may emit no lines. */
+export namespace YarnNpmAuditReport {
+  interface AuditAdvisory<A extends string = string> {
+    readonly value: A;
+    readonly children: {
+      readonly ID?: number | string;
+      readonly Issue: string;
+      readonly URL?: string;
+      readonly Severity: Severity;
+      readonly "Vulnerable Versions": string;
+      readonly "Tree Versions": string[];
+      readonly Dependents: `${string}@${string}`[];
+    };
   }
+  interface Message {
+    readonly type: "info" | "warning" | "error";
+    readonly name: number | null;
+    readonly displayName: string;
+    readonly indent: string;
+    readonly data: string;
+  }
+  type AuditResponse<A extends string = string> = AuditAdvisory<A> | Message;
 }
 
-declare namespace NPMAuditReportV2 {
+export namespace NPMAuditReportV2 {
   interface Audit {
     readonly auditReportVersion: 2;
     readonly vulnerabilities: Vulnerabilities;
     readonly metadata: Metadata;
   }
-
   interface Metadata {
     readonly vulnerabilities: VulnerabilityMetadata;
     readonly dependencies: Dependencies;
   }
-
-  interface VulnerabilityMetadata extends Record<Severity, number> {}
-
+  interface VulnerabilityMetadata extends SeverityMap {
+    readonly total: number;
+  }
   interface Dependencies {
     readonly prod: number;
     readonly dev: number;
@@ -382,144 +291,190 @@ declare namespace NPMAuditReportV2 {
     readonly peerOptional: number;
     readonly total: number;
   }
-
   interface Vulnerabilities extends Readonly<Record<string, Advisory>> {}
-
   interface Advisory {
     readonly name: string;
     readonly severity: Severity;
     readonly isDirect: boolean;
-    readonly via: Via[] | string[];
+    readonly via: (Via | string)[];
     readonly effects: string[];
     readonly range: string;
     readonly nodes: string[];
-    readonly fixAvailable: FixAvailable | false;
+    readonly fixAvailable: boolean | FixAvailable;
+    readonly fixBlockedByReleaseAge?: boolean;
   }
-
   interface FixAvailable {
     readonly name: string;
     readonly version: string;
     readonly isSemVerMajor: boolean;
   }
-
-  interface Via<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
+  interface ViaCvss extends SharedCvss {}
+  interface Via {
     readonly source: number;
     readonly name: string;
     readonly dependency: string;
     readonly title: string;
-    readonly url: `https://github.com/advisories/${ID}`;
+    readonly url: string;
     readonly severity: Severity;
     readonly range: string;
+    readonly cwe?: string[];
+    readonly cvss?: ViaCvss;
   }
-
-  // Error handling
-
   interface ECONNREFUSEDMessageResponse {
     readonly message: `request to ${string} failed, reason: connect ECONNREFUSED ${string}`;
   }
-
   interface GenericMessageResponse {
     readonly message: string;
   }
-
   type MessageResponse = ECONNREFUSEDMessageResponse | GenericMessageResponse;
-
-  interface ENOLOCKError {
+  interface ENOLOCKError extends AuditError {
     readonly code: "ENOLOCK";
     readonly summary: "This command requires an existing lockfile.";
     readonly detail: "Try creating one first with: npm i --package-lock-only\nOriginal error: loadVirtual requires existing shrinkwrap file";
   }
-
-  interface GenericError {
-    readonly code: string;
-    readonly summary: string;
-    readonly detail: string;
-  }
-
+  interface GenericError extends AuditError {}
   interface ErrorResponse {
     readonly error: ENOLOCKError | GenericError;
   }
-
   type AuditResponse = Audit | ErrorResponse | MessageResponse;
 }
 
-declare namespace PNPMAuditReport {
+export namespace PNPMAuditReport {
   interface Audit {
-    readonly actions: Action[];
+    readonly actions?: Action[];
     readonly advisories: AdvisoryMap;
-    readonly muted: any[];
+    readonly muted?: unknown[];
     readonly metadata: AuditMetadata;
   }
-
-  interface AuditMetadata {
-    readonly vulnerabilities: SeverityMap;
-    readonly dependencies: number;
-    readonly devDependencies: number;
-    readonly optionalDependencies: number;
-    readonly totalDependencies: number;
-  }
-
-  interface AdvisoryMap extends Readonly<Record<GitHubAdvisoryId, Advisory>> {}
-
-  interface Advisory<ID extends GitHubAdvisoryId = GitHubAdvisoryId> {
+  interface AuditMetadata extends LegacyAuditMetadata {}
+  interface AdvisoryMap extends Readonly<Record<string, Advisory>> {}
+  /** Common view of legacy quick-audit and modern bulk-derived pnpm advisories. */
+  interface Advisory<ID extends string = string> extends Omit<
+    Partial<LegacyAuditAdvisory>,
+    "github_advisory_id" | "patched_versions"
+  > {
     readonly findings: Finding[];
-    readonly metadata: Metadata | null;
-    readonly vulnerable_versions: string;
+    readonly id: number;
+    readonly title: string;
     readonly module_name: string;
     readonly severity: Severity;
-    readonly github_advisory_id: ID;
-    readonly cves: CVE[];
-    readonly access: string;
-    readonly patched_versions: string;
-    readonly cvss: Cvss;
-    readonly updated: ISO8601Date;
-    readonly recommendation: string;
-    readonly cwe: CWE[];
-    readonly found_by: FoundBy | null;
-    readonly deleted: ISO8601Date | null;
-    readonly id: number;
-    readonly references: string;
-    readonly created: ISO8601Date;
-    readonly reported_by: ReportedBy | null;
-    readonly title: string;
-    readonly npm_advisory_id: null;
-    readonly overview: string;
-    readonly url: `https://github.com/advisories/${ID}`;
+    readonly vulnerable_versions: string;
+    readonly url: string;
+    readonly github_advisory_id?: ID;
+    readonly patched_versions?: string | null;
+    readonly patched_versions_unpublished?: boolean;
+    readonly cwe: string | string[];
   }
-
-  interface Cvss {
-    readonly score: number;
-    readonly vectorString: string | null;
+  interface LegacyAdvisory<
+    ID extends GitHubAdvisoryId = GitHubAdvisoryId,
+  > extends LegacyAuditAdvisory<ID> {}
+  /** pnpm 11/12 synthesize these fields from bulk advisories and the lockfile. */
+  interface CurrentAdvisory extends Advisory {
+    readonly findings: CurrentFinding[];
+    readonly github_advisory_id: string;
+    readonly cwe: string;
   }
-
-  interface Finding {
-    readonly version: string;
-    readonly paths: string[];
+  interface CurrentAudit extends Audit {
+    readonly advisories: Readonly<Record<string, CurrentAdvisory>>;
   }
-
-  interface Action {
-    readonly action: string;
-    readonly resolves: Resolve[];
-    readonly module: string;
-  }
-
-  interface Resolve {
-    readonly id: number;
-    readonly path: string;
+  interface Cvss extends SharedCvss {}
+  interface Finding extends AuditFinding {}
+  interface CurrentFinding extends Finding {
     readonly dev: boolean;
     readonly optional: boolean;
     readonly bundled: boolean;
   }
-
-  interface GenericError {
+  interface Action extends AuditAction {}
+  interface Resolve extends AuditResolution {}
+  interface GenericError extends AuditError {}
+  interface PnpmError {
     readonly code: string;
-    readonly summary: string;
-    readonly detail: string;
+    readonly message: string;
   }
-
   interface ErrorResponse {
-    readonly error: GenericError;
+    readonly error: GenericError | PnpmError;
   }
-
   type AuditResponse = Audit | ErrorResponse;
+}
+
+/** Registry /-/npm/v1/security/advisories/bulk response, before dependency-tree processing. */
+export namespace NPMAuditBulkReport {
+  interface Advisory {
+    readonly id: number;
+    readonly name?: string;
+    readonly url: string;
+    readonly title: string;
+    readonly severity: Severity;
+    readonly vulnerable_versions: string;
+    readonly cwe?: string | string[];
+    readonly cvss?: Cvss;
+  }
+  type AuditResponse = Readonly<Record<string, Advisory[]>>;
+}
+
+/** bun audit --json prints the unfiltered bulk response; errors may produce no JSON. */
+export namespace BunAuditReport {
+  interface Advisory extends NPMAuditBulkReport.Advisory {}
+  type Audit = Readonly<Record<string, Advisory[]>>;
+  type AuditResponse = Audit;
+}
+
+/** npm audit signatures --json (distinct from vulnerability reports). */
+export namespace NPMAuditSignaturesReport {
+  interface Package {
+    readonly name: string;
+    readonly version: string;
+    readonly location: string;
+    readonly registry: string;
+  }
+  interface MissingSignature extends Package {
+    readonly integrity?: string;
+    readonly resolved?: string;
+  }
+  interface InvalidSignature extends MissingSignature {
+    readonly code: "EINTEGRITYSIGNATURE" | "EATTESTATIONVERIFY";
+    readonly message: string;
+    readonly type: "dependencies" | "devDependencies" | "optionalDependencies" | "peerDependencies";
+    readonly keyid?: string;
+    readonly signature?: string;
+    readonly predicateType?: string;
+  }
+  /** Registry metadata is extensible; bundle contents follow the external Sigstore schema. */
+  interface Attestations extends JsonObject {
+    readonly url: string;
+  }
+  interface AttestationBundle {
+    readonly predicateType: string;
+    readonly bundle: JsonObject;
+  }
+  interface VerifiedPackage extends Package {
+    readonly attestations: Attestations;
+    readonly attestationBundles?: AttestationBundle[];
+  }
+  interface Audit {
+    readonly invalid: InvalidSignature[];
+    readonly missing: MissingSignature[];
+    /** Present with --include-attestations; counts are not emitted by npm. */
+    readonly verified?: VerifiedPackage[];
+  }
+  type AuditResponse = Audit | NPMAuditReportV2.ErrorResponse;
+}
+
+/** pnpm audit signatures --json emits counts rather than npm's attestation bundles. */
+export namespace PNPMAuditSignaturesReport {
+  interface SignatureIssue {
+    readonly name: string;
+    readonly registry: string;
+    readonly version: string;
+    readonly integrity?: string;
+    readonly reason?: string;
+    readonly resolved?: string;
+  }
+  interface Audit {
+    readonly audited: number;
+    readonly invalid: SignatureIssue[];
+    readonly missing: SignatureIssue[];
+    readonly verified: number;
+  }
+  type AuditResponse = Audit | PNPMAuditReport.ErrorResponse;
 }
